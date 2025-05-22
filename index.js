@@ -70,6 +70,21 @@ async function run() {
       const result = await plantsCollection.insertOne(cursor);
       res.send(result);
     });
+
+    app.put("/updateplant/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatePlant = req.body;
+      const updateDoc = { $set: updatePlant };
+      const options = { upsert: true };
+      const result = await plantsCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
   } finally {
   }
 }
