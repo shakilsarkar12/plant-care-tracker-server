@@ -65,6 +65,16 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/newplants", async (req, res) => {
+      const cursor = { createdAt: -1 };
+      const result = await plantsCollection
+        .find()
+        .sort(cursor)
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
+
     app.post("/plants", async (req, res) => {
       const cursor = req.body;
       const result = await plantsCollection.insertOne(cursor);
@@ -90,8 +100,7 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await plantsCollection.deleteOne(query);
       res.send(result);
-    })
-
+    });
   } finally {
   }
 }
