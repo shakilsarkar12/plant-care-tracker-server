@@ -22,6 +22,7 @@ async function run() {
     const database = client.db("plantCareDB");
     const plantsCollection = database.collection("plants");
     const usersCollection = database.collection("users");
+    const feedbackCollection = database.collection("feedback");
 
     // users related API
     app.get("/user/:email", async (req, res) => {
@@ -101,6 +102,15 @@ async function run() {
       const result = await plantsCollection.deleteOne(query);
       res.send(result);
     });
+
+    // Feedback related API
+    app.post("/feedback", async (req, res) => {
+      const cursor = req.body;
+      const result = await feedbackCollection.insertOne(cursor);
+      res.send(result);
+    });
+
+
   } finally {
   }
 }
