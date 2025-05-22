@@ -50,6 +50,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/myplants/:email", async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      const query = { email: email };
+      const result = await plantsCollection.find(query).toArray();
+      res.send(result)
+    });
+
     app.get("/plants", async (req, res) => {
       const cursor = plantsCollection.find();
       const result = await cursor.toArray();
