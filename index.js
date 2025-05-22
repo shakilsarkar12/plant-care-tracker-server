@@ -1,6 +1,6 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config({ override: true });
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
@@ -33,7 +33,9 @@ async function run() {
 
     app.post("/user", async (req, res) => {
       const cursor = req.body;
-      const exitingUser = await usersCollection.findOne({ email: cursor.email});
+      const exitingUser = await usersCollection.findOne({
+        email: cursor.email,
+      });
       if (exitingUser) {
         res.send(exitingUser);
       } else {
@@ -42,8 +44,8 @@ async function run() {
       }
     });
 
-    // plants related API\
-    app.get("/plant/:id", async(req, res) => {
+    // plants related API
+    app.get("/plant/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await plantsCollection.findOne(query);
@@ -52,10 +54,9 @@ async function run() {
 
     app.get("/myplants/:email", async (req, res) => {
       const email = req.params.email;
-      console.log(email);
       const query = { email: email };
       const result = await plantsCollection.find(query).toArray();
-      res.send(result)
+      res.send(result);
     });
 
     app.get("/plants", async (req, res) => {
