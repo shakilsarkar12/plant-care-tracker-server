@@ -61,10 +61,26 @@ async function run() {
     });
 
     app.get("/plants", async (req, res) => {
-      const cursor = plantsCollection.find();
-      const result = await cursor.toArray();
+      const sortBy = req.query.sortBy;
+
+      if (sortBy === "nextWatering") {
+        const result = await plantsCollection
+          .find()
+          .sort({ nextWatering: 1 }) // date ascending
+          .toArray();
+        return res.send(result);
+      }
+
+      const result = await plantsCollection.find().toArray();
+
+      if (sortBy === "careLevel") {
+        const careOrder = { easy: 1, moderate: 2, difficult: 3 };
+        result.sort((a, b) => careOrder[a.careLevel] - careOrder[b.careLevel]);
+      }
+
       res.send(result);
     });
+    
 
     app.get("/newplants", async (req, res) => {
       const cursor = { createdAt: -1 };
