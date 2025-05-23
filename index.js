@@ -104,6 +104,11 @@ async function run() {
     });
 
     // Feedback related API
+    app.get("/feedback", async (req, res) => {
+      const result = await feedbackCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/feedback", async (req, res) => {
       const cursor = req.body;
       const result = await feedbackCollection.insertOne(cursor);
