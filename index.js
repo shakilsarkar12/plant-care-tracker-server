@@ -28,7 +28,7 @@ async function run() {
     // users related API
     app.get("/user/:email", async (req, res) => {
       const email = req.params.email;
-      const query = { email: email };
+      const query = { email };
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
@@ -49,12 +49,30 @@ async function run() {
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const updatedUser = req.body;
-      const result = await usersCollection.updateOne(
-        { email },
-        { $set: updatedUser }
-      );
-      res.send(result);
+
+      try {
+        const result = await usersCollection.updateOne(
+          { email },
+          { $set: updatedUser }
+        );
+
+        res.status(200).json({
+          success: true,
+          modifiedCount: result.modifiedCount,
+          message:
+            result.modifiedCount > 0
+              ? "Profile updated successfully."
+              : "No changes made.",
+        });
+      } catch (err) {
+        res.status(500).json({
+          success: false,
+          message: "Something went wrong during update.",
+        });
+      }
     });
+    
+    
     
 
     // plants related API
@@ -78,16 +96,20 @@ async function run() {
 
     app.get("/plants", async (req, res) => {
       const sortBy = req.query.sortBy;
+      const category = req.query.category;
 
-      if (sortBy === "nextWatering") {
-        const result = await plantsCollection
-          .find()
-          .sort({ nextWatering: 1 }) // date ascending
-          .toArray();
-        return res.send(result);
+      const filter = {};
+      if (category) {
+        filter.category = category;
       }
 
-      const result = await plantsCollection.find().toArray();
+      let cursor = plantsCollection.find(filter);
+
+      if (sortBy === "nextWatering") {
+        cursor = cursor.sort({ nextWatering: 1 });
+      }
+
+      let result = await cursor.toArray();
 
       if (sortBy === "careLevel") {
         const careOrder = { easy: 1, moderate: 2, difficult: 3 };
@@ -96,6 +118,7 @@ async function run() {
 
       res.send(result);
     });
+    
 
     app.get("/newplants", async (req, res) => {
       const cursor = { createdAt: -1 };
