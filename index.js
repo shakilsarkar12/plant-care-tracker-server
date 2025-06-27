@@ -23,6 +23,7 @@ async function run() {
     const plantsCollection = database.collection("plants");
     const usersCollection = database.collection("users");
     const feedbackCollection = database.collection("feedback");
+    const contactCollection = database.collection("contact");
 
     // users related API
     app.get("/user/:email", async (req, res) => {
@@ -45,12 +46,27 @@ async function run() {
       }
     });
 
+    app.put("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const updatedUser = req.body;
+      const result = await usersCollection.updateOne(
+        { email },
+        { $set: updatedUser }
+      );
+      res.send(result);
+    });
+    
+
     // plants related API
     app.get("/plant/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await plantsCollection.findOne(query);
-      res.send(result);
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await plantsCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        res.status(401).send({});
+      }
     });
 
     app.get("/myplants/:email", async (req, res) => {
@@ -80,14 +96,13 @@ async function run() {
 
       res.send(result);
     });
-    
 
     app.get("/newplants", async (req, res) => {
       const cursor = { createdAt: -1 };
       const result = await plantsCollection
         .find()
         .sort(cursor)
-        .limit(6)
+        .limit(8)
         .toArray();
       res.send(result);
     });
@@ -131,7 +146,44 @@ async function run() {
       res.send(result);
     });
 
+    app.post("/contact-info", async (req, res) => {
+      try {
+        const { name, email, message } = req.body;
 
+        if (!name || !email || !message) {
+          return res.status(400).json({ error: "All fields are required." });
+        }
+
+        const contactData = {
+          name,
+          email,
+          message,
+          createdAt: new Date(),
+        };
+
+        const result = await contactCollection.insertOne(contactData);
+        res.status(201).json({ success: true, insertedId: result.insertedId });
+      } catch (err) {
+        console.error("Error saving contact message:", err.message);
+        res.status(500).json({ error: "Server error. Try again later." });
+      }
+    });
+
+    // stats related Api
+    app.get("/dashboard-stats", async (req, res) => {
+      try {
+        const plantCount = await plantsCollection.countDocuments();
+        const feedbackCount = await feedbackCollection.countDocuments();
+
+        res.json({
+          plants: plantCount,
+          feedbacks: feedbackCount,
+        });
+      } catch (error) {
+        console.error("Dashboard error:", error.message);
+        res.status(500).json({ error: "Server Error" });
+      }
+    });
   } finally {
   }
 }
