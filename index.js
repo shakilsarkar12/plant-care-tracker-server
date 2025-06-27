@@ -134,6 +134,39 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/upcoming-plants/:email", async (req, res) => {
+      const { email } = req.params;
+
+      // Get today's date and next 3 days range
+      const today = new Date();
+      const todayStr = today.toISOString().split("T")[0]; // "2025-06-27"
+
+      const threeDaysLater = new Date();
+      threeDaysLater.setDate(today.getDate() + 3);
+      const threeDaysLaterStr = threeDaysLater.toISOString().split("T")[0]; // "2025-06-30"
+
+      try {
+        const upcomingPlants = await plantsCollection
+          .find({
+            email: email,
+            nextWatering: {
+              $gte: todayStr, // greater than or equal to today
+              $lte: threeDaysLaterStr, // less than or equal to 3 days later
+            },
+          })
+          .sort({ nextWatering: 1 }) // Optional: sort by date ascending
+          .toArray();
+
+        res.send(upcomingPlants);
+      } catch (error) {
+        console.error("Error fetching upcoming watering plants:", error);
+        res
+          .status(500)
+          .send({ error: "Failed to fetch upcoming watering plants" });
+      }
+    });
+    
+    
     // Feedback related API
     app.get("/feedback", async (req, res) => {
       const result = await feedbackCollection.find().toArray();
