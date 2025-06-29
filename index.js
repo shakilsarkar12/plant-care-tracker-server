@@ -5,7 +5,14 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://plant-care-tracker-c369a.web.app",
+      "http://localhost:5173",
+    ],
+  })
+);
 app.use(express.json());
 
 const uri = process.env.DB_URI;
@@ -71,9 +78,6 @@ async function run() {
         });
       }
     });
-    
-    
-    
 
     // plants related API
     app.get("/plant/:id", async (req, res) => {
@@ -118,7 +122,6 @@ async function run() {
 
       res.send(result);
     });
-    
 
     app.get("/newplants", async (req, res) => {
       const cursor = { createdAt: -1 };
@@ -166,18 +169,18 @@ async function run() {
 
       const threeDaysLater = new Date();
       threeDaysLater.setDate(today.getDate() + 3);
-      const threeDaysLaterStr = threeDaysLater.toISOString().split("T")[0]; // "2025-06-30"
+      const threeDaysLaterStr = threeDaysLater.toISOString().split("T")[0];
 
       try {
         const upcomingPlants = await plantsCollection
           .find({
             email: email,
             nextWatering: {
-              $gte: todayStr, // greater than or equal to today
-              $lte: threeDaysLaterStr, // less than or equal to 3 days later
+              $gte: todayStr,
+              $lte: threeDaysLaterStr,
             },
           })
-          .sort({ nextWatering: 1 }) // Optional: sort by date ascending
+          .sort({ nextWatering: 1 })
           .toArray();
 
         res.send(upcomingPlants);
@@ -188,8 +191,7 @@ async function run() {
           .send({ error: "Failed to fetch upcoming watering plants" });
       }
     });
-    
-    
+
     // Feedback related API
     app.get("/feedback", async (req, res) => {
       const result = await feedbackCollection.find().toArray();
